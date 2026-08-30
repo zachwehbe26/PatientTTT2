@@ -1,3 +1,4 @@
+--Initialize statues
 if CLIENT then
     hook.Add("Initialize", "ttt2_pat_init", function()
 		STATUS:RegisterStatus("ttt2_pat_infection_status", {
@@ -29,7 +30,7 @@ function makePlayerPatientSick(sickPlayer)
     if SERVER then
         sickPlayer:GiveItem("item_pat_infection")
 		local randDelay = math.Rand(2,10)
-		timer.Create("ttt2_sick_ply_cough", randDelay, 1000, function()
+			timer.Create("ttt2_sick_ply_cough" .. sickPlayer:SteamID64(), randDelay, 1000, function() --dynamic timers
 			sickPlayer:EmitSound( "coof.wav")
 			local coughPitch = math.Rand(10,25)
 			local coughYaw = math.Rand(-10,10)
@@ -77,7 +78,7 @@ end
 
 -- Function that gives immune traits to a player
 function makePlayerPatientImmune(sickPlayer)
-	timer.Remove("ttt2_sick_ply_cough")
+	timer.Remove("ttt2_sick_ply_cough" .. sickPlayer:SteamID64())
     sickPlayer:SetNWBool("patient_poisoned", false)
     if SERVER then
         sickPlayer:GiveItem("item_pat_immunity")

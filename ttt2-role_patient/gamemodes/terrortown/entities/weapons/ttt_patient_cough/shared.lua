@@ -77,18 +77,59 @@ if CLIENT then
             --set the color
             render.SetColorMaterial()
 
-            --renders the backface of the spehere
+            --render both the back and front site of the sphere
             render.CullMode(MATERIAL_CULLMODE_CW)
+
             render.DrawSphere(pos, maxRenderDistance, 30, 30, colorSphere)
             render.CullMode(MATERIAL_CULLMODE_CCW)
 
     end)
 end
 
+--function that checks if players are in the infection sphere
+function checkIfPlyInSphere(patient)
+    local patPos = patient:GetPos()
+    for _, ply in ipairs( player.GetAll() ) do
+        --valid player checks
+        if not ply:Alive() or ply:IsSpec() then return end
+        --skip patient player
+        if patient == ply then continue end
+            --if in radius, infect!
+            if ply:GetPos():Distance(patPos) <= 200 then
+                makePlayerPatientSick(ply)
+                print("Player: ",ply:Nick()," is in the radius!\nInfecting Player....")
+                --add to global values
+                --PATIENT_DATA:AddInfected(ply) TODO: FIX
+
+            end
+    end
+end
 
 -- Override original primary attack
 
 function SWEP:PrimaryAttack()
-    --No primary attack yet!
+    self:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
+
+    if not IsValid(self:GetOwner()) then return end
+
+    self:GetOwner():LagCompensation(true)
+
+
+    --play cough sound
+    self:GetOwner():EmitSound("coof.wav")
+
+    if SERVER then
+        --Check if anyone is in the sphere
+        checkIfPlyInSphere(self:GetOwner())
+    end
+
+
 end
+
+
+
+
+
+
+
 
