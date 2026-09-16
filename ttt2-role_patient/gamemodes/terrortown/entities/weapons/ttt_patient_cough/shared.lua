@@ -1,5 +1,6 @@
 if SERVER then
 	AddCSLuaFile()	
+    util.AddNetworkString("ttt2_pat_infect")
 end
 
 SWEP.HoldType               = "normal"
@@ -150,7 +151,7 @@ function makePlayerPatientImmune(sickPlayer)
         sickPlayer:RemoveItem("item_pat_infection")
         STATUS:AddStatus(sickPlayer, "ttt2_pat_immune_status")
 
-        if GetConVar("ttt2_get_full_health_on_immunity"):GetBool() then
+        if GetConVar("ttt2_pat_get_full_health_on_immunity"):GetBool() then
             sickPlayer:SetHealth(sickPlayer:GetMaxHealth())
         end
     end
@@ -158,10 +159,31 @@ function makePlayerPatientImmune(sickPlayer)
 end
 
 
+--fire a ray between patient and ply to infect
+local function canInfectPly(patient,ply)
+
+    if GetConVar("ttt2_pat_infect_through_walls"):GetBool() then return true end--return true straight away if we are allowed to infect through wall
+
+    local startPos = patient:GetPos()
+    local endPos = ply:GetPos()
+
+    local tr = util.TraceLine({
+        start = startPos,
+        endpos = endPos,
+        filter = {patient, ply},
+        mask = MASK_SOLID
+    })
+
+
+
+    return not tr.Hit --return true if we dont hit a wall
+
+end
+
+
 
 --function that checks if players are in the infection sphere
 function checkIfPlyInSphere(patient, playersInfected)
-    --makePlayerPatientSick(patient, patient) --make patient sick for testing
 
     local patPos = patient:GetPos()
     for _, ply in ipairs( player.GetAll() ) do
@@ -171,19 +193,25 @@ function checkIfPlyInSphere(patient, playersInfected)
         if ply:HasEquipmentItem("item_pat_immunity") then continue end--make sure they havent become immune
         if ply:HasEquipmentItem("item_pat_infection") then continue end --skip ply if they are already currently infected
 
+
         --skip patient player
-        if patient == ply then continue end
+        --if patient == ply then continue end
             --if in radius, infect!
             if ply:GetPos():Distance(patPos) <= 200 then
 
-                table.insert(playersInfected, ply:Nick()) --add player to infected players this cough
+                if ply:GetTeam() == 'traitors' then continue end --skip fellow traitors
+                if not canInfectPly(patient,ply) then continue end --skip ply if theres an object in the way
 
+                table.insert(playersInfected, ply:Nick()) --add player to infected players this cough
                 timer.Create("ttt2_wait_sickness" .. ply:SteamID64(), math.Rand(GetConVar("ttt2_pat_wait_sickness_low"):GetInt(),GetConVar("ttt2_pat_wait_sickness_high"):GetInt()), 1, function() --wait until the infection kicks in
 
                     if not IsValid(ply) then return end --are they still a valid ply?
                     if ply:HasEquipmentItem("item_pat_immunity") then return end
                     if ply:HasEquipmentItem("item_pat_infection") then return end
                     makePlayerPatientSick(ply,patient) --infect player here
+                    SendFullStateUpdate()
+                        net.Start("ttt2_pat_infect")
+                        net.Send( ply )
                 end)
             end
 
@@ -218,7 +246,6 @@ function SWEP:PrimaryAttack()
 
     --init players infected as nobody
     --concatenate table as a string of players
-    print(playersInfected)
     local playersInfectedStr = "Nobody"
 
     if #playersInfected > 0 then

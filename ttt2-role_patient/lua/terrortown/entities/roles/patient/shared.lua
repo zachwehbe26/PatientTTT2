@@ -5,32 +5,38 @@ if SERVER then
 end
 
 function ROLE:PreInitialize()
-  self.color = Color(191, 214, 65, 255)
+  self.color = Color(249, 113, 113, 255)
 
   self.abbr = "pat" -- abbreviation
-  self.surviveBonus = 0 -- bonus multiplier for every survive while another player was killed
-  self.scoreKillsMultiplier = 2 -- multiplier for kill of player of another team
-  self.scoreTeamKillsMultiplier = -8 -- multiplier for teamkill
-  self.unknownTeam = true
+  self.surviveBonus = 0.5 -- bonus multiplier for every survive while another player was killed
+  self.scoreKillsMultiplier = 5 -- multiplier for kill of player of another team
+  self.scoreTeamKillsMultiplier = -16 -- multiplier for teamkill
+  self.preventFindCredits = false
+  self.preventKillCredits = false
+  self.preventTraitorAloneCredits = false
 
-  self.defaultTeam = TEAM_INNOCENT
+  self.isOmniscientRole = true
+
+  self.defaultEquipment = SPECIAL_EQUIPMENT -- here you can set up your own default equipment
+  self.defaultTeam = TEAM_TRAITOR
 
   self.conVarData = {
     pct = 0.17, -- necessary: percentage of getting this role selected (per player)
     maximum = 1, -- maximum amount of roles in a round
     minPlayers = 6, -- minimum amount of players until this role is able to get selected
-    credits = 0, -- the starting credits of a specific role
+    credits = 1, -- the starting credits of a specific role
     togglable = true, -- option to toggle a role for a client if possible (F1 menu)
     random = 33,
-    traitorButton = 0, -- can use traitor buttons
-    shopFallback = SHOP_DISABLED
+    traitorButton = 1, -- can use traitor buttons
+    shopFallback = SHOP_FALLBACK_TRAITOR
   }
-end
+  end
 
--- now link this subrole with its baserole
-function ROLE:Initialize()
-  roles.SetBaseRole(self, ROLE_INNOCENT)
-end
+  -- now link this subrole with its baserole
+  function ROLE:Initialize()
+      roles.SetBaseRole(self, ROLE_TRAITOR)
+  end
+
 
 if SERVER then
    -- Give Loadout on respawn and rolechange
@@ -46,7 +52,8 @@ end
 
 CreateConVar("ttt2_pat_cough_cooldown_timer", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_pat_sickness_timer", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
-CreateConVar("ttt2_get_full_health_on_immunity", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
+CreateConVar("ttt2_pat_get_full_health_on_immunity", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
+CreateConVar("ttt2_pat_infect_through_walls", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_pat_cough_dmg", 3, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_pat_wait_sickness_low", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_pat_wait_sickness_high", 20, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
@@ -56,8 +63,14 @@ if CLIENT then
     local form = vgui.CreateTTT2Form(parent, "header_roles_additional")
 	
 	 form:MakeCheckBox({
-      serverConvar = "ttt2_get_full_health_on_immunity",
+      serverConvar = "ttt2_pat_get_full_health_on_immunity",
       label = "label_pat_get_full_health_on_immunity"
+    })
+
+
+    form:MakeCheckBox({
+      serverConvar = "ttt2_pat_infect_through_walls",
+      label = "label_pat_infect_through_walls"
     })
 	
     form:MakeSlider({
