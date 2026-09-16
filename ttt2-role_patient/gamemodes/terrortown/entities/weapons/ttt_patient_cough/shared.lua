@@ -209,7 +209,8 @@ function checkIfPlyInSphere(patient, playersInfected)
                     if ply:HasEquipmentItem("item_pat_immunity") then return end
                     if ply:HasEquipmentItem("item_pat_infection") then return end
                     makePlayerPatientSick(ply,patient) --infect player here
-                    SendFullStateUpdate()
+						
+                    	SendFullStateUpdate() --send a net message to the infected player
                         net.Start("ttt2_pat_infect")
                         net.Send( ply )
                 end)
