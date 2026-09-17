@@ -2,6 +2,7 @@ if SERVER then
 	AddCSLuaFile()	
     util.AddNetworkString("ttt2_pat_infect")
     util.AddNetworkString("ttt2_pat_cure")
+    include("terrortown/autorun/shared/sh_pat_handler.lua")
 end
 
 SWEP.HoldType               = "normal"
@@ -144,20 +145,6 @@ function makePlayerPatientSick(sickPlayer, patient)
     end
 end
 
--- Function that gives immune traits to a player
-function makePlayerPatientImmune(sickPlayer)
-    timer.Remove("ttt2_sick_ply_cough" .. sickPlayer:SteamID64())
-    if sickPlayer:HasEquipmentItem("item_pat_immunity") then return end
-    sickPlayer:SetNWBool("patient_poisoned", false)
-    if SERVER then --replace infection items with immunity items
-        sickPlayer:GiveItem("item_pat_immunity")
-        sickPlayer:RemoveItem("item_pat_infection")
-        STATUS:AddStatus(sickPlayer, "ttt2_pat_immune_status")
-        SendFullStateUpdate()
-        net.Start("ttt2_pat_cure")
-        net.Send( sickPlayer )
-    end
-end
 
 
 
@@ -240,7 +227,7 @@ if SERVER then
 
 
         --play cough sound
-        owner:EmitSound("coof.wav")
+        --owner:EmitSound("coof.wav")
 
         if SERVER then
             --Check if anyone is in the sphere
