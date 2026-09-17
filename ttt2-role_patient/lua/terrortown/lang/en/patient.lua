@@ -7,9 +7,11 @@ L["body_found_" .. PATIENT.abbr] = "They were a Patient."
 L["search_role_" .. PATIENT.abbr] = "This person was a Patient!"
 L["target_" .. PATIENT.name] = "Patient"
 L["ttt2_desc_" .. PATIENT.name] = [[You are the Patient! Infect others with your contagious cough!]]
-L["lang_pat_infect_title"] = "You Are Sick!"
-L["lang_pat_infect_desc"] = "You are slower, and have a deathly cough!"
-
+L["lang_pat_infect_title"] = "You Have Been Infected!"
+L["lang_pat_infect_desc"] = "Find a health station, or wait out the infection."
+L["lang_pat_cure_title"] = "You Are Now Immune!"
+L["lang_pat_cure_desc"] = "You are now immune to the patient infection."
+L["lang_pat_help_desc"] = "Infect other non-traitors around you."
 
 -- ITEM LANGUAGE STRINGS
 L["lang_pat_immune_title"] = "Strong Immune System"
@@ -18,10 +20,11 @@ L["item_patient_infection_title"] = "Weak Immune System"
 L["item_patient_infection_desc"] = "Your immune system is compromised, resulting in reduced speed and vision."
 
 -- CONVAR LANGUAGE STRINGS
-L["label_pat_get_full_health_on_immunity"] = "Sick player gets full health on immunity: "
+L["label_pat_healstation_cure"] = "Immunize players if they heal at a health station: "
 L["label_pat_infect_through_walls"] = "Infect players through walls: "
 L["label_pat_cough_cooldown_timer"] = "How long until the patient can cough again: "
 L["label_pat_sickness_timer"] = "How long a player is sick for: "
+L["label_pat_infection_radius"] = "The Infection Radius: "
 L["label_pat_cough_dmg"] = "How much damage you take each cough: "
 L["label_pat_wait_sickness_low"] = "The shortest time you could wait until getting infected: "
 L["label_pat_wait_sickness_high"] = "The longest time you could wait until getting infected: "

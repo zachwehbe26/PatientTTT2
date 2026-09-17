@@ -50,23 +50,23 @@ if SERVER then
 	end
 end
 
-CreateConVar("ttt2_pat_cough_cooldown_timer", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
-CreateConVar("ttt2_pat_sickness_timer", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
-CreateConVar("ttt2_pat_get_full_health_on_immunity", 1, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
-CreateConVar("ttt2_pat_infect_through_walls", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
-CreateConVar("ttt2_pat_cough_dmg", 3, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
-CreateConVar("ttt2_pat_wait_sickness_low", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
-CreateConVar("ttt2_pat_wait_sickness_high", 20, {FCVAR_ARCHIVE, FCVAR_NOTIFY})
+CreateConVar("ttt2_pat_cough_cooldown_timer", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
+CreateConVar("ttt2_pat_sickness_timer", 60, {FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
+CreateConVar("ttt2_pat_infection_radius", 200, {FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
+CreateConVar("ttt2_pat_infect_through_walls", 0, {FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
+CreateConVar("ttt2_pat_cough_dmg", 3, {FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
+CreateConVar("ttt2_pat_wait_sickness_low", 10, {FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
+CreateConVar("ttt2_pat_wait_sickness_high", 20, {FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
+CreateConVar("ttt2_pat_healstation_cure", 1,{FCVAR_ARCHIVE, FCVAR_NOTIFY,FCVAR_REPLICATED})
 
 if CLIENT then
   function ROLE:AddToSettingsMenu(parent)
     local form = vgui.CreateTTT2Form(parent, "header_roles_additional")
-	
-	 form:MakeCheckBox({
-      serverConvar = "ttt2_pat_get_full_health_on_immunity",
-      label = "label_pat_get_full_health_on_immunity"
-    })
 
+    form:MakeCheckBox({
+      serverConvar = "ttt2_pat_healstation_cure",
+      label = "label_pat_healstation_cure"
+    })
 
     form:MakeCheckBox({
       serverConvar = "ttt2_pat_infect_through_walls",
@@ -96,6 +96,14 @@ if CLIENT then
       max = 120,
       decimal = 0
 	})
+
+    form:MakeSlider({
+      serverConvar = "ttt2_pat_infection_radius",
+      label = "label_pat_infection_radius",
+      min = 20,
+      max = 1000,
+      decimal = 0
+    })
 
     form:MakeSlider({
       serverConvar = "ttt2_pat_wait_sickness_low",

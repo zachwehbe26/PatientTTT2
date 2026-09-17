@@ -17,5 +17,5 @@ hook.Add("TTTPlayerSpeedModifier", "TTT2PatientSpeedrunGood", function(ply, _, _
         return
     end
 
-    speedMultiplierModifier[1] = speedMultiplierModifier[1] * 1.1
+    --speedMultiplierModifier[1] = speedMultiplierModifier[1] * 1.1
 end)

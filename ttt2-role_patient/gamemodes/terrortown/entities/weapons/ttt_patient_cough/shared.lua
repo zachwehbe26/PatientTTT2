@@ -1,6 +1,7 @@
 if SERVER then
 	AddCSLuaFile()	
     util.AddNetworkString("ttt2_pat_infect")
+    util.AddNetworkString("ttt2_pat_cure")
 end
 
 SWEP.HoldType               = "normal"
@@ -21,7 +22,7 @@ if CLIENT then
    SWEP.IconLetter          = "j"
 
    function SWEP:Initialize()
-		self:AddTTT2HUDHelp("Cough on other players to infect them. Eventually they will develop an immunity.")
+		self:AddTTT2HUDHelp(LANG.TryTranslation("lang_pat_help_desc"))
 	end
 end
 
@@ -73,7 +74,7 @@ if CLIENT then
             local pos = client:GetPos()
 
             --size of the sphere
-            local maxRenderDistance = 200
+            local maxRenderDistance = GetConVar("ttt2_pat_infection_radius"):GetInt()
 
             --set the color
             render.SetColorMaterial()
@@ -90,6 +91,8 @@ end
 
 -- Function that gives sick traits to a player
 function makePlayerPatientSick(sickPlayer, patient)
+
+    patAddPlayerInfected( sickPlayer ) --add player to handla
 
 
     sickPlayer:SetNWBool("patient_poisoned", true)
@@ -125,7 +128,7 @@ function makePlayerPatientSick(sickPlayer, patient)
             --deal damage to sick player
             sickPlayer:TakeDamageInfo( dmg )
 
-            local newCoughInterval = math.Rand(2,10)
+            local newCoughInterval = math.Rand(4,8)
             timer.Create(timerName, newCoughInterval, 1, cough) --get a new cough timer
         end
 
@@ -144,19 +147,18 @@ end
 -- Function that gives immune traits to a player
 function makePlayerPatientImmune(sickPlayer)
     timer.Remove("ttt2_sick_ply_cough" .. sickPlayer:SteamID64())
+    if sickPlayer:HasEquipmentItem("item_pat_immunity") then return end
     sickPlayer:SetNWBool("patient_poisoned", false)
-
     if SERVER then --replace infection items with immunity items
         sickPlayer:GiveItem("item_pat_immunity")
         sickPlayer:RemoveItem("item_pat_infection")
         STATUS:AddStatus(sickPlayer, "ttt2_pat_immune_status")
-
-        if GetConVar("ttt2_pat_get_full_health_on_immunity"):GetBool() then
-            sickPlayer:SetHealth(sickPlayer:GetMaxHealth())
-        end
+        SendFullStateUpdate()
+        net.Start("ttt2_pat_cure")
+        net.Send( sickPlayer )
     end
-
 end
+
 
 
 --fire a ray between patient and ply to infect
@@ -190,14 +192,14 @@ function checkIfPlyInSphere(patient, playersInfected)
 
         --valid player checks
         if not ply:Alive() or ply:IsSpec() then return end
-        if ply:HasEquipmentItem("item_pat_immunity") then continue end--make sure they havent become immune
+        if ply:HasEquipmentItem("item_pat_immunity") then continue end --make sure they havent become immune
         if ply:HasEquipmentItem("item_pat_infection") then continue end --skip ply if they are already currently infected
 
 
         --skip patient player
-        --if patient == ply then continue end
+        if patient == ply then continue end
             --if in radius, infect!
-            if ply:GetPos():Distance(patPos) <= 200 then
+            if ply:GetPos():Distance(patPos) <= GetConVar("ttt2_pat_infection_radius"):GetInt() then
 
                 if ply:GetTeam() == 'traitors' then continue end --skip fellow traitors
                 if not canInfectPly(patient,ply) then continue end --skip ply if theres an object in the way
@@ -220,45 +222,51 @@ function checkIfPlyInSphere(patient, playersInfected)
 end
 
 -- Override original primary attack
-function SWEP:PrimaryAttack()
+if SERVER then
+    function SWEP:PrimaryAttack()
 
-    local owner = self:GetOwner()
-    if not IsValid(owner) then return end
+        local owner = self:GetOwner()
+        if not IsValid(owner) then return end
 
-    self:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
-    STATUS:AddTimedStatus(owner, "ttt2_pat_cough_cooldown", GetConVar("ttt2_pat_cough_cooldown_timer"):GetInt() , true)
-
-
-
-    --Initialize table to track players infected this cough
-    local playersInfected = {}
-
-    owner:LagCompensation(true)
+        self:SetNextPrimaryFire( CurTime() + self.Primary.Delay )
+        STATUS:AddTimedStatus(owner, "ttt2_pat_cough_cooldown", GetConVar("ttt2_pat_cough_cooldown_timer"):GetInt() , true)
 
 
-    --play cough sound
-    owner:EmitSound("coof.wav")
 
-    if SERVER then
-        --Check if anyone is in the sphere
-        checkIfPlyInSphere(owner, playersInfected)
+        --Initialize table to track players infected this cough
+        local playersInfected = {}
+
+        owner:LagCompensation(true)
+
+
+        --play cough sound
+        owner:EmitSound("coof.wav")
+
+        if SERVER then
+            --Check if anyone is in the sphere
+            checkIfPlyInSphere(owner, playersInfected)
+        end
+
+        --init players infected as nobody
+        --concatenate table as a string of players
+        local playersInfectedStr = "Nobody"
+
+        if #playersInfected > 0 then
+            playersInfectedStr = table.concat(playersInfected, "\n")
+        end
+
+        --display message of people infected
+        if SERVER then
+            EPOP:AddMessage(owner, {text = "Players Infected!", color = roles.PATIENT.color}, playersInfectedStr, 4, true)
+        end
+
+        owner:LagCompensation(false)
+
     end
+end
 
-    --init players infected as nobody
-    --concatenate table as a string of players
-    local playersInfectedStr = "Nobody"
-
-    if #playersInfected > 0 then
-        playersInfectedStr = table.concat(playersInfected, "\n")
-    end
-
-    --display message of people infected
-    if SERVER then
-        EPOP:AddMessage(owner, {text = "Players Infected!", color = roles.PATIENT.color}, playersInfectedStr, 4, true)
-    end
-
-    owner:LagCompensation(false)
-
+if CLIENT then
+    function SWEP:PrimaryAttack() return end
 end
 
 
